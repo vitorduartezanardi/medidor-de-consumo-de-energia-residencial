@@ -33,7 +33,7 @@ const char* DEVICE_ID   = "medidor-01";   // TROQUE por um ID único e use o mes
 const int PIN_V = 34;
 const int PIN_I = 35;
 const int PIN_LED = 2;                   // LED azul da placa DevKit V1
-float CAL_V = 0.25f;      // V por contagem do ADC (calibrar com multímetro)
+float CAL_V = 0.0656f;     // V por contagem do ADC (calibrado: 126 V no multímetro / 480 V lidos com 0,25)
 float CAL_I = 0.00403f;   // A por contagem (SCT-013-005: 5 A = 1 V -> 5*3,3/4095)
 const float I_MIN = 0.05f;               // abaixo disso a corrente é considerada ruído
 const int   N_MAX = 8000;                // capacidade do buffer (a janela de tempo é que limita a coleta)
