@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f6f3ee">
+<title>Medidor de Energia</title>
+<style>
+:root{--bg:#f6f3ee;--card:#fff;--text:#1b1f24;--muted:#7a828c;--line:#ebe7df;--blue:#4b78b8;--blue2:#b9cde6;--banner:#b7c9e2;--bannerText:#1d2b40;--tree:#9db6d6;--ok:#2e9e5b;--warn:#e08a1e;--bad:#d64545;--soft:#f1eee8}
+@media (prefers-color-scheme:dark){:root{--bg:#111316;--card:#1b1f24;--text:#eceff3;--muted:#8d97a3;--line:#2a3038;--blue:#6a9be0;--blue2:#2c4467;--banner:#26384f;--bannerText:#e6eefa;--tree:#3b5679;--soft:#242a31}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:520px;margin:0 auto;padding:0 16px 32px}
+button{font:inherit;border:0;cursor:pointer;color:inherit;background:none}
+header{display:flex;align-items:center;gap:10px;padding:16px 0 10px}
+header h1{font-size:1.35rem;margin:0;font-weight:600;line-height:1.1}
+header p{margin:0;font-size:.7rem;color:var(--muted)}
+.sp{flex:1}
+.status{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bad)}.dot.on{background:var(--ok)}.dot.demo{background:var(--warn)}
+.icon{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:1.3rem;color:var(--text)}
+.icon:active{background:var(--soft)}
+.banner{position:relative;background:var(--banner);color:var(--bannerText);border-radius:22px;padding:20px 20px 46px;min-height:150px;overflow:hidden;margin-bottom:12px}
+.banner p{margin:0;font-size:1.2rem;font-weight:600;line-height:1.3;max-width:88%;position:relative}
+.banner svg{position:absolute;right:14px;bottom:0;opacity:.9}
+.pill{position:absolute;left:18px;bottom:14px;background:rgba(0,0,0,.28);color:#fff;font-size:.72rem;border-radius:99px;padding:3px 10px}
+.card{background:var(--card);border-radius:22px;padding:18px;margin-bottom:12px}
+.label{font-size:.74rem;color:var(--muted);font-weight:600}
+.now{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.big{font-size:3rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.big small{font-size:1.05rem;color:var(--muted);font-weight:500;margin-left:5px}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted)}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 10px;margin-top:16px}
+.grid b{display:block;font-size:1.05rem;font-variant-numeric:tabular-nums;font-weight:600}
+.grid span{font-size:.68rem;color:var(--muted)}
+.meter{height:6px;border-radius:99px;background:var(--soft);overflow:hidden;margin-top:14px}
+.meter i{display:block;height:100%;width:0;background:var(--ok);transition:width .4s,background .4s}
+.mlabel{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-top:5px}
+.alert{display:none;background:#fdecec;color:#9b1c1c;border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:.86rem;font-weight:600}
+.tabs{display:flex;gap:6px;margin-bottom:6px}
+.tabs button{padding:6px 14px;border-radius:99px;font-size:.82rem;color:var(--muted);background:var(--soft)}
+.tabs button.on{background:var(--text);color:var(--card);font-weight:600}
+.chartbox{position:relative}
+canvas{width:100%;height:210px;display:block;touch-action:pan-y}
+.tip{position:absolute;top:0;transform:translateX(-50%);background:#14181d;color:#fff;font-size:.8rem;font-weight:600;padding:4px 10px;border-radius:99px;white-space:nowrap;pointer-events:none;display:none}
+.legend{display:flex;gap:14px;justify-content:center;font-size:.74rem;color:var(--muted);margin-top:4px;flex-wrap:wrap}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:var(--blue)}
+.legend i.g{background:none;border-top:2px dotted var(--muted);border-radius:0;width:12px;height:0;vertical-align:middle}
+.use{display:grid;grid-template-columns:1fr 1px 1fr;align-items:center;text-align:center}
+.use .sep{background:var(--line);height:44px}
+.use .k{font-size:.78rem;color:var(--muted);display:flex;justify-content:center;gap:6px;align-items:center}
+.use .v{font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
+.use .v small{font-size:.8rem;color:var(--muted);font-weight:500}
+.use .s{font-size:.7rem;color:var(--muted);margin-top:2px}
+h2{font-size:1rem;margin:4px 4px 10px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chips button{background:var(--soft);padding:5px 12px;font-size:.8rem;border-radius:99px}
+.add{display:flex;gap:8px}
+input,select{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--text)}
+.primary{background:var(--text);color:var(--card);border-radius:12px;padding:11px 18px;font-weight:600;white-space:nowrap}
+.eq{display:grid;grid-template-columns:40px 1fr auto auto;gap:2px 12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.eq .av{width:40px;height:40px;border-radius:50%;background:var(--blue2);display:grid;place-items:center;font-weight:700;color:var(--blue);grid-row:span 2}
+.eq .n{font-weight:600;font-size:.95rem}.eq .m{color:var(--muted);font-size:.75rem}
+.eq .r{text-align:right;font-weight:600;font-size:.92rem;grid-row:span 2}
+.eq .r small{display:block;color:var(--muted);font-weight:400;font-size:.7rem}
+.eq .x{color:var(--muted);padding:6px;grid-row:span 2}
+.eq .bar{grid-column:2/3;height:5px;border-radius:99px;background:var(--soft);overflow:hidden}
+.eq .bar i{display:block;height:100%;background:var(--blue)}
+.empty{color:var(--muted);font-size:.85rem;padding:6px 2px}
+.hint{font-size:.74rem;color:var(--muted);margin:10px 2px 0}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;z-index:10}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:var(--card);border-radius:26px 26px 0 0;padding:20px 18px 26px;max-height:92vh;overflow:auto;transform:translateY(100%);transition:transform .25s;z-index:11}
+.open .sheet-bg{display:block}.open .sheet{transform:none}
+.sheet h3{margin:0 0 14px;font-size:1.1rem}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form .full{grid-column:1/-1}
+.form label span{display:block;margin-bottom:4px}
+.eff{background:var(--soft);border-radius:12px;padding:10px 12px;font-size:.88rem}
+.link{color:var(--bad);font-size:.85rem;padding:10px 0}
+footer{text-align:center;font-size:.68rem;color:var(--muted);margin-top:18px}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="var(--blue)"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+    <div><h1>Energia</h1><p>Medidor de consumo · NEXT/PPE 2026.2</p></div>
+    <div class="sp"></div>
+    <div class="status"><span class="dot" id="dot"></span><span id="st">conectando</span></div>
+    <button class="icon" id="menu" aria-label="Ajustes">⋮</button>
+  </header>
+
+  <section class="banner">
+    <p id="msg">Conectando ao medidor…</p>
+    <svg width="130" height="90" viewBox="0 0 130 90" fill="var(--tree)"><ellipse cx="40" cy="38" rx="17" ry="26"/><rect x="38" y="60" width="4" height="30"/><ellipse cx="72" cy="48" rx="13" ry="20"/><rect x="70" y="64" width="4" height="26"/><ellipse cx="102" cy="42" rx="12" ry="22"/><rect x="100" y="62" width="3" height="28"/><rect x="0" y="86" width="130" height="4"/></svg>
+    <button class="pill" id="pg">1/3</button>
+  </section>
+
+  <div class="alert" id="alert">⚠️ Corrente próxima do limite do sensor (5 A). Desligue a carga para não danificar o sensor.</div>
+
+  <section class="card">
+    <div class="now">
+      <div><div class="label">Potência agora</div><div class="big" style="margin-top:6px"><span id="p">--</span><small>W</small></div></div>
+      <div style="text-align:right"><span class="live"><i></i>ao vivo</span><div class="label" style="margin-top:6px" id="costh">R$ -- / hora</div></div>
+    </div>
+    <div class="grid">
+      <div><b id="v">--</b><span>Tensão (V)</span></div>
+      <div><b id="i">--</b><span>Corrente (A)</span></div>
+      <div><b id="pf">--</b><span>Fator de pot.</span></div>
+      <div><b id="s">--</b><span>Aparente (VA)</span></div>
+      <div><b id="q">--</b><span>Reativa (var)</span></div>
+      <div><b id="phi">--</b><span>Defasagem (°)</span></div>
+    </div>
+    <div class="meter"><i id="meter"></i></div>
+    <div class="mlabel"><span>Carga no sensor</span><span>limite 5 A</span></div>
+  </section>
+
+  <section class="card">
+    <div class="tabs" id="tabs"><button data-r="day" class="on">24 horas</button><button data-r="hour">1 hora</button><button data-r="live">Ao vivo</button></div>
+    <div class="chartbox"><canvas id="chart"></canvas><div class="tip" id="tip"></div></div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <section class="card use">
+    <div><div class="k">⚡ Uso</div><div class="v"><span id="kwh">--</span> <small>kWh</small></div><div class="s" id="time">--</div></div>
+    <div class="sep"></div>
+    <div><div class="k">$ Custo</div><div class="v"><small>R$</small> <span id="cost">--</span></div><div class="s" id="costm">--</div></div>
+  </section>
+
+  <h2>Uso de energia do equipamento</h2>
+  <section class="card">
+    <div class="chips" id="chips"></div>
+    <div class="add"><input id="eqname" placeholder="Equipamento ligado agora"><button class="primary" id="eqadd">Registrar</button></div>
+    <div id="eqlist"></div>
+    <p class="hint">Ligue o equipamento, espere a leitura estabilizar e toque em Registrar. A projeção mensal usa as horas de uso por dia dos ajustes.</p>
+  </section>
+  <footer>Universidade São Francisco · Bragança Paulista</footer>
+</main>
+
+<div id="sheetwrap">
+  <div class="sheet-bg" id="bg"></div>
+  <div class="sheet" role="dialog" aria-label="Ajustes">
+    <h3>Tarifa, bandeira e meta</h3>
+    <div class="form">
+      <label><span class="label">Tarifa (R$ por kWh)</span><input id="tariff" type="number" inputmode="decimal" step="0.01" min="0"></label>
+      <label><span class="label">Bandeira tarifária</span>
+        <select id="flag">
+          <option value="0">Verde</option>
+          <option value="0.01885">Amarela (+0,01885)</option>
+          <option value="0.04463">Vermelha 1 (+0,04463)</option>
+          <option value="0.07877">Vermelha 2 (+0,07877)</option>
+        </select></label>
+      <label><span class="label">Impostos (%)</span><input id="tax" type="number" inputmode="decimal" step="0.1" min="0" max="60"></label>
+      <label><span class="label">Horas de uso por dia</span><input id="hours" type="number" inputmode="decimal" step="0.5" min="0" max="24"></label>
+      <label class="full"><span class="label">Meta de consumo em 24 h (kWh)</span><input id="goal" type="number" inputmode="decimal" step="0.1" min="0"></label>
+      <label class="full"><span class="label">Código do medidor (ID)</span><input id="devid" autocapitalize="off" autocomplete="off" spellcheck="false"></label>
+      <div class="eff full">Tarifa efetiva: <b>R$ <span id="eff">--</span></b> por kWh</div>
+      <button class="primary full" id="save">Salvar</button>
+    </div>
+    <p class="hint">Se o valor do kWh já inclui impostos (valor da conta), deixe Impostos em 0. Os valores das bandeiras são de referência (ANEEL): confirme na sua conta.</p>
+    <button class="link" id="reset">Zerar consumo acumulado</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const qs = new URLSearchParams(location.search);
+const demo = qs.has('demo');
+const MAX_A = 5;
+const store = {get(k,d){try{return JSON.parse(localStorage.getItem(k)) ?? d}catch(e){return d}}, set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let cfg = Object.assign({tariff:0.95, flag:0, tax:0, hours:4, goal:2}, store.get('cfg',{}));
+let equip = store.get('equip', []);
+let live = [], hist = [], range = 'day', fails = 0, last = null, hover = -1, pts = [], msgIdx = 0;
+
+const f = (n,d=1) => Number(n).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const eff = () => (cfg.tariff + cfg.flag) / (1 - Math.min(cfg.tax,60)/100);
+const fmtTime = s => `${Math.floor(s/3600)}h ${String(Math.floor(s%3600/60)).padStart(2,'0')}m ${String(Math.floor(s%60)).padStart(2,'0')}s medidos`;
+const sum = a => a.reduce((x,y)=>x+y,0);
+
+// ---------- modo demonstração (?demo=1) ----------
+const sim = {kwh:0, t:0, load:0, acc:0};
+const LOADS = [0,9,60,150,300,450];
+function simStep(){
+  if (sim.t % 8 === 0) sim.load = LOADS[Math.floor(Math.random()*LOADS.length)];
+  sim.t++;
+  const v = 127+(Math.random()-.5)*2, p = sim.load ? sim.load*(1+(Math.random()-.5)*.03) : 0;
+  const pf = sim.load>200 ? .98 : .8, i = p/(v*pf) || 0;
+  sim.kwh += p/3.6e6; sim.acc += p;
+  if (sim.t % 60 === 0){ hist.push(Math.round(sim.acc/60)); sim.acc = 0; if (hist.length>1440) hist.shift(); }
+  return {v,i,p,s:v*i,q:Math.sqrt(Math.max(0,(v*i)**2-p*p)),pf:p?pf:0,kwh:sim.kwh,seconds:sim.t};
+}
+if (demo) for (let k=0;k<1000;k++) hist.push(Math.round(LOADS[Math.floor(k/37)%LOADS.length]*(1+(Math.random()-.5)*.1)));
+
+// ---------- comunicação (MQTT sobre WebSocket seguro) ----------
+const BROKER = qs.get('broker') || 'wss://broker.hivemq.com:8884/mqtt', TOPIC_ROOT = 'usf-tcc-energia';
+let devId = String(qs.get('id') || store.get('devid','medidor-01')).replace(/[^A-Za-z0-9_-]/g,'') || 'medidor-01';
+let client = null, lastMsg = 0, minAcc = 0, minN = 0, demoTimer = null;
+const T = s => `${TOPIC_ROOT}/${devId}/${s}`;
+function connect(){
+  if (demo){ setStatus('demo','demonstração'); if(!demoTimer) demoTimer=setInterval(()=>{ last=simStep(); render(last); },1000); return; }
+  if (client) client.end(true);
+  setStatus('', 'conectando ao broker…');
+  client = mqtt.connect(BROKER, {clientId:'web-'+Math.random().toString(16).slice(2,10), reconnectPeriod:3000, connectTimeout:8000});
+  client.on('connect', ()=>{ setStatus('', 'aguardando medidor…'); client.subscribe(T('#'), {qos:0}); });
+  client.on('close', ()=> setStatus('', 'sem conexão com o broker'));
+  client.on('message', (topic, buf)=>{
+    const k = topic.slice(T('').length), txt = buf.toString();
+    let m; try{ m = JSON.parse(txt); }catch(e){ m = txt; }
+    if (k==='data'){ lastMsg=Date.now(); last=m; onMinute(m.p); render(m); setStatus('on','medidor online'); }
+    else if (k==='status'){ if (m==='offline') setStatus('', 'medidor offline'); }
+    else if (k==='history' && m.w){ hist=m.w; draw(); }
+    else if (k==='config' && m.tariff>=0){ cfg=Object.assign(cfg,m); store.set('cfg',cfg); fillForm(); renderAll(); }
+  });
+}
+function onMinute(p){ minAcc+=p; if(++minN>=60){ hist.push(Math.round(minAcc/60)); if(hist.length>1440) hist.shift(); minAcc=0; minN=0; } }
+const pub = (k,v,retain=false) => client && client.connected && client.publish(T(k), typeof v==='string'?v:JSON.stringify(v), {qos:1, retain});
+setInterval(()=>{ if(!demo && lastMsg && Date.now()-lastMsg>6000) setStatus('', 'sem dados do medidor'); },2000);
+function setStatus(c,t){ $('dot').className='dot '+c; $('st').textContent=t; }
+
+// ---------- painel ----------
+function render(d){
+  $('p').textContent=f(d.p,0); $('v').textContent=f(d.v,0); $('i').textContent=f(d.i,2);
+  $('s').textContent=f(d.s,0); $('pf').textContent=f(d.pf,2);
+  $('q').textContent=f(d.q||0,0); $('phi').textContent=f(d.pf>0?Math.acos(Math.min(1,d.pf))*180/Math.PI:0,0);
+  $('kwh').textContent=f(d.kwh,2); $('time').textContent=fmtTime(d.seconds);
+  $('cost').textContent=f(d.kwh*eff(),2);
+  const kw=d.p/1000, cm=kw*eff()*cfg.hours*30;
+  $('costh').textContent=`R$ ${f(kw*eff(),2)} / hora`;
+  $('costm').textContent=`≈ R$ ${f(cm,2)}/mês nesta carga`;
+  const pct=Math.min(100,d.i/MAX_A*100), m=$('meter');
+  m.style.width=pct+'%'; m.style.background=pct>90?'var(--bad)':pct>70?'var(--warn)':'var(--ok)';
+  $('alert').style.display = d.i>MAX_A*0.9 ? 'block':'none';
+  live.push(d.p); if (live.length>120) live.shift();
+  drawMsg(); draw();
+}
+function renderAll(){ $('eff').textContent=f(eff(),4); if(last) render(last); drawEquip(); }
+
+// ---------- faixa de mensagens ----------
+function msgs(){
+  const out=[]; if(!last) return ['Conectando ao medidor…'];
+  const kw=last.p/1000;
+  out.push(last.p>0 ? `Agora você está consumindo ${f(last.p,0)} W, cerca de R$ ${f(kw*eff(),2)} por hora.` : 'Nenhuma carga ligada neste momento.');
+  const used=sum(hist.slice(-1440))/60/1000;
+  out.push(cfg.goal>0 ? `Nas últimas 24 h você usou ${f(used,2)} kWh, ${f(used/cfg.goal*100,0)}% da meta de ${f(cfg.goal,1)} kWh.` : `Nas últimas 24 h você usou ${f(used,2)} kWh.`);
+  out.push(`Esse consumo por ${f(cfg.hours,1)} h ao dia custaria cerca de R$ ${f(kw*eff()*cfg.hours*30,2)} por mês.`);
+  return out;
+}
+function drawMsg(){ const m=msgs(); msgIdx%=m.length; $('msg').textContent=m[msgIdx]; $('pg').textContent=`${msgIdx+1}/${m.length}`; }
+$('pg').onclick=()=>{ msgIdx++; drawMsg(); };
+setInterval(()=>{ msgIdx++; drawMsg(); }, 8000);
+
+// ---------- gráfico ----------
+function series(){
+  if (range==='live') return {kind:'line', v:live, n:120, unit:'W', dec:0, left:'-2 min', label:i=>`${f(live[i],0)} W`, legend:['Potência (W)']};
+  if (range==='hour'){ const v=hist.slice(-60); return {kind:'line', v, n:60, unit:'W', dec:0, left:'-1 h', label:i=>`${f(v[i],0)} W`, legend:['Média por minuto (W)']}; }
+  const h=hist.slice(-1440), v=[]; let a=0; h.forEach(w=>{ a+=w/60/1000; v.push(a); });
+  return {kind:'cum', v, n:1440, unit:'kWh', dec:2, left:'-24 h', goal:cfg.goal, label:i=>`${f(v[i],2)} kWh`, legend:['Últimas 24 h','Meta']};
+}
+function draw(){
+  const s=series(), c=$('chart'), dpr=devicePixelRatio||1, w=c.clientWidth, h=c.clientHeight;
+  c.width=w*dpr; c.height=h*dpr;
+  const g=c.getContext('2d'); g.scale(dpr,dpr); g.clearRect(0,0,w,h);
+  const cs=getComputedStyle(document.documentElement), css=k=>cs.getPropertyValue(k).trim();
+  $('legend').innerHTML = `<span><i></i>${s.legend[0]}</span>` + (s.goal>0 ? `<span><i class="g"></i>${s.legend[1]}</span>` : '');
+  const top=Math.max(s.unit==='W'?100:0.1, ...s.v, s.goal||0)*1.15;
+  const R=40, T=26, B=18, W=w-R-4, H=h-T-B, X=i=>4+W*(i+(s.n-s.v.length))/(s.n-1), Y=v=>T+H*(1-v/top);
+  g.font='11px system-ui'; g.lineWidth=1; g.fillStyle=css('--muted'); g.strokeStyle=css('--line');
+  g.fillText(`(${s.unit})`, w-R+4, T-12);
+  for(let k=0;k<=4;k++){ const y=T+H*k/4; g.beginPath(); g.moveTo(4,y); g.lineTo(4+W,y); g.stroke(); g.fillText(f(top*(1-k/4),s.dec), w-R+4, y+4); }
+  g.fillText(s.left, 4, h-3); g.fillText('agora', 4+W-28, h-3);
+  pts=[];
+  if (s.v.length>=2){
+    const grad=g.createLinearGradient(0,T,0,T+H); grad.addColorStop(0,css('--blue')); grad.addColorStop(1,css('--blue2'));
+    g.beginPath(); s.v.forEach((v,i)=>i?g.lineTo(X(i),Y(v)):g.moveTo(X(i),Y(v)));
+    g.lineTo(X(s.v.length-1),T+H); g.lineTo(X(0),T+H); g.closePath(); g.fillStyle=grad; g.globalAlpha=.85; g.fill(); g.globalAlpha=1;
+    g.beginPath(); s.v.forEach((v,i)=>i?g.lineTo(X(i),Y(v)):g.moveTo(X(i),Y(v))); g.strokeStyle=css('--blue'); g.lineWidth=2; g.stroke();
+    s.v.forEach((v,i)=>pts.push({x:X(i),y:Y(v),t:s.label(i)}));
+  }
+  if (s.goal>0){ g.setLineDash([2,4]); g.strokeStyle=css('--muted'); g.lineWidth=1.2; g.beginPath(); g.moveTo(4,Y(s.goal)); g.lineTo(4+W,Y(s.goal)); g.stroke(); g.setLineDash([]); g.fillStyle=css('--muted'); g.fillText('meta '+f(s.goal,1), 8, Y(s.goal)-4); }
+  const tip=$('tip');
+  if (hover>=0 && pts[hover]){
+    const p=pts[hover]; g.strokeStyle=css('--text'); g.lineWidth=1; g.beginPath(); g.moveTo(p.x,T-4); g.lineTo(p.x,T+H); g.stroke();
+    g.fillStyle=css('--card'); g.strokeStyle=css('--blue'); g.lineWidth=2; g.beginPath(); g.arc(p.x,p.y,5,0,7); g.fill(); g.stroke();
+    tip.style.display='block'; tip.textContent=p.t; tip.style.left=Math.min(Math.max(p.x,40),w-R-10)+'px';
+  } else tip.style.display='none';
+}
+const chart=$('chart');
+function pointer(e){ if(!pts.length) return; const r=chart.getBoundingClientRect(), x=e.clientX-r.left; let b=0,bd=1e9; pts.forEach((p,i)=>{const d=Math.abs(p.x-x); if(d<bd){bd=d;b=i}}); hover=b; draw(); }
+chart.addEventListener('pointerdown',pointer); chart.addEventListener('pointermove',e=>{ if(e.buttons||e.pointerType==='mouse') pointer(e); });
+chart.addEventListener('pointerleave',()=>{ hover=-1; draw(); });
+$('tabs').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; range=b.dataset.r; hover=-1;
+  [...$('tabs').children].forEach(x=>x.classList.toggle('on',x===b)); draw(); };
+
+// ---------- ajustes ----------
+function fillForm(){ $('devid').value=devId; $('tariff').value=cfg.tariff; $('flag').value=String(cfg.flag); $('tax').value=cfg.tax; $('hours').value=cfg.hours; $('goal').value=cfg.goal; }
+const num = id => parseFloat(String($(id).value).replace(',','.'));
+['tariff','flag','tax','hours','goal'].forEach(id=>$(id).addEventListener('input',()=>{
+  const t=num('tariff'), x=num('tax'), h=num('hours'), gl=num('goal');
+  if (t>=0) cfg.tariff=t; cfg.flag=parseFloat($('flag').value)||0; if (x>=0) cfg.tax=x; if (h>=0) cfg.hours=Math.min(h,24); if (gl>=0) cfg.goal=gl;
+  renderAll();
+}));
+const sheet=on=>$('sheetwrap').classList.toggle('open',on);
+$('menu').onclick=()=>sheet(true); $('bg').onclick=()=>sheet(false);
+$('save').onclick=()=>{
+  store.set('cfg',cfg);
+  pub('config', cfg, true);
+  sheet(false);
+};
+$('reset').onclick=()=>{
+  if(!confirm('Zerar o consumo acumulado?')) return;
+  if(demo){ sim.kwh=0; sim.t=0; } else pub('cmd','reset');
+  live=[]; sheet(false);
+};
+
+// ---------- equipamentos ----------
+['Lâmpada','Ventilador','Carregador','Liquidificador','Secador'].forEach(n=>{
+  const b=document.createElement('button'); b.textContent=n; b.onclick=()=>{$('eqname').value=n}; $('chips').appendChild(b); });
+$('eqadd').onclick=()=>{
+  if(!last) return alert('Aguardando leitura do medidor.');
+  const name=$('eqname').value.trim()||'Equipamento '+(equip.length+1);
+  const recent=live.slice(-5), p=sum(recent)/recent.length;
+  equip.push({name,p:Math.round(p*10)/10}); store.set('equip',equip); $('eqname').value=''; drawEquip();
+};
+function drawEquip(){
+  const box=$('eqlist'), max=Math.max(1,...equip.map(e=>e.p)); box.innerHTML='';
+  if(!equip.length){ box.innerHTML='<div class="empty" style="margin-top:12px">Nenhum equipamento registrado ainda.</div>'; return; }
+  [...equip].map((e,i)=>({...e,i})).sort((a,b)=>b.p-a.p).forEach(e=>{
+    const ch=e.p/1000*eff(), d=document.createElement('div'); d.className='eq';
+    d.innerHTML=`<div class="av"></div><div class="n"></div><div class="r">R$ ${f(ch*cfg.hours*30,2)}<small>por mês</small></div><button class="x" title="Remover">✕</button><div class="m">${f(e.p,0)} W · R$ ${f(ch,2)}/h</div><div class="bar"><i style="width:${e.p/max*100}%"></i></div>`;
+    d.querySelector('.n').textContent=e.name; d.querySelector('.av').textContent=(e.name[0]||'?').toUpperCase();
+    d.querySelector('.x').onclick=()=>{ equip.splice(e.i,1); store.set('equip',equip); drawEquip(); };
+    box.appendChild(d);
+  });
+}
+
+addEventListener('resize',draw);
+$('devid').addEventListener('change',()=>{ const v=$('devid').value.replace(/[^A-Za-z0-9_-]/g,''); if(!v) return; devId=v; store.set('devid',v); live=[]; hist=[]; last=null; connect(); });
+fillForm(); renderAll(); connect();
+</script>
+</body>
+</html>
