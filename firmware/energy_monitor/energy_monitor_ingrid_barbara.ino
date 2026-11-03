@@ -28,7 +28,7 @@ const char* WIFI_PASS   = "SUA_SENHA";
 const char* MQTT_HOST   = "broker.hivemq.com";      //  broker público (TCP 1883). Público: "broker.hivemq.com"
 const uint16_t MQTT_PORT = 1883;
 const char* TOPIC_ROOT  = "usf-tcc-energia";
-const char* DEVICE_ID   = "medidor-barbara-ingrid-7";          // deve ser igual ao ID digitado no aplicativo
+const char* DEVICE_ID   = "medidor-01";   // TROQUE por um ID único e use o mesmo nos Ajustes do app (o broker é público)
 
 const int PIN_V = 34;
 const int PIN_I = 35;
