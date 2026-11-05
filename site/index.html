@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Medidor de Energia · ESP32 + MQTT</title>
+<meta name="description" content="Medidor de baixo custo com ESP32 que mede tensão e corrente, calcula potência, consumo e custo e mostra tudo em um painel no celular. TCC da Universidade São Francisco.">
+<meta name="theme-color" content="#f6f3ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111316" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="Medidor de Energia · ESP32 + MQTT">
+<meta property="og:description" content="Potência, consumo e custo da sua instalação elétrica em tempo real, no celular.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="img/tela_inicio.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233a63a0'/%3E%3Cpath d='M18 4L7 18h7l-2 10 11-14h-7z' fill='white'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+<script>
+  // Links antigos do painel (?id=, ?demo=, ?broker=) continuam funcionando: seguem para /painel/
+  if (/[?&](id|demo|broker)=/.test(location.search)) location.replace('painel/' + location.search + location.hash);
+</script>
+</head>
+<body>
+<a class="skip" href="#conteudo">Ir para o conteúdo</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path fill="currentColor" d="M13.5 2 5 13.2h5.6L9.5 22 19 9.8h-5.7z"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></g></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.6 16a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19.2" r="1" fill="currentColor"/></g></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></g></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 3.5v17h17"/><path d="M7.5 15l3.5-4.5 3 3 5-6.5"/></g></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 4.5 5.5v6c0 4.5 3.1 8.1 7.5 9.7 4.4-1.6 7.5-5.2 7.5-9.7v-6z"/></g></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2 2.5 19.5h19z"/><path d="M12 10v4.5M12 17.2v.1"/></g></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M12 11v5.5M12 7.8v.1"/></g></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 4.5A2 2 0 0 1 6.5 2.8H19.5v15.7H6.5a2 2 0 0 0-2 2z"/><path d="M4.5 20.5a2 2 0 0 0 2 1.7h13"/></g></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 7 3.5 12l5 5M15.5 7l5 5-5 5M13.5 4.5l-3 15"/></g></symbol>
+  <symbol id="i-github" viewBox="0 0 16 16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></g></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></g></symbol>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#topo" aria-label="Medidor de Energia, início">
+      <svg aria-hidden="true"><use href="#i-bolt"/></svg>
+      <span>Medidor de Energia<small>TCC · Universidade São Francisco</small></span>
+    </a>
+    <button class="burger" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu"><svg aria-hidden="true"><use href="#i-menu"/></svg></button>
+    <nav class="menu" id="menu" aria-label="Seções">
+      <a href="#projeto">Projeto</a>
+      <a href="#como">Como funciona</a>
+      <a href="#hardware">Hardware</a>
+      <a href="#software">Software</a>
+      <a href="#painel">Painel</a>
+      <a href="#resultados">Resultados</a>
+      <a href="#relacionados">Relacionados</a>
+      <a href="#equipe">Equipe</a>
+    </nav>
+  </div>
+</header>
+
+<main id="conteudo">
+
+<!-- ============ HERO ============ -->
+<div class="hero" id="topo">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow"><svg width="14" height="14" aria-hidden="true"><use href="#i-bolt"/></svg> TCC · Projeto de extensão NEXT/PPE 2026.2</span>
+      <h1>Saiba quanto sua casa consome, <em>em tempo real</em>.</h1>
+      <p class="lead">Um medidor de baixo custo com ESP32 que mede tensão e corrente da instalação elétrica, calcula potência, consumo em kWh e o custo estimado, e mostra tudo em um painel no celular.</p>
+      <div class="cta">
+        <a class="btn pri" href="painel/">Abrir o painel <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <a class="btn sec" href="painel/?demo=1">Ver demonstração</a>
+      </div>
+      <p class="meta"><span><b>Sensores</b> ZMPT101B · SCT-013</span><span><b>Controlador</b> ESP32</span><span><b>Comunicação</b> MQTT</span></p>
+    </div>
+    <div class="phone"><img src="img/tela_inicio.jpg" width="750" height="1624" alt="Tela inicial do painel mostrando potência atual, tensão, corrente e fator de potência."></div>
+  </div>
+</div>
+
+<!-- ============ PROJETO ============ -->
+<section id="projeto">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker">O projeto</p>
+      <h2>Consumo de energia que dá para enxergar.</h2>
+      <p>Na maioria das casas, o consumo só aparece na conta do mês seguinte, quando já não dá para mudar nada. Este projeto mostra, agora, quanto cada ligação custa.</p>
+    </div>
+    <div class="grid g3">
+      <div class="card"><div class="ic"><svg aria-hidden="true"><use href="#i-alert"/></svg></div><h3>O problema</h3><p class="muted">Sem um medidor próprio, o morador não relaciona o que liga na tomada com o valor da fatura, e perde a chance de economizar.</p></div>
+      <div class="card"><div class="ic"><svg aria-hidden="true"><use href="#i-bolt"/></svg></div><h3>A proposta</h3><p class="muted">Medir tensão e corrente com sensores acessíveis, calcular as grandezas elétricas no ESP32 e exibir potência, kWh e custo em uma interface simples no celular.</p></div>
+      <div class="card"><div class="ic"><svg aria-hidden="true"><use href="#i-phone"/></svg></div><h3>Para quem</h3><p class="muted">Moradores que querem acompanhar o consumo da residência, comparar equipamentos e definir metas, sem instalar aplicativo.</p></div>
+    </div>
+
+    <h3 style="margin:44px 0 18px">O que o painel mostra</h3>
+    <div class="grid g4">
+      <div class="metric"><b>W</b><span><strong>Potência ativa</strong>o que está sendo consumido agora</span></div>
+      <div class="metric"><b>V</b><span><strong>Tensão</strong>valor eficaz da rede</span></div>
+      <div class="metric"><b>A</b><span><strong>Corrente</strong>valor eficaz da carga</span></div>
+      <div class="metric"><b>FP</b><span><strong>Fator de potência</strong>e defasagem em graus</span></div>
+      <div class="metric"><b>VA</b><span><strong>Potência aparente</strong>tensão × corrente</span></div>
+      <div class="metric"><b>var</b><span><strong>Potência reativa</strong>parcela que não realiza trabalho</span></div>
+      <div class="metric"><b>kWh</b><span><strong>Consumo</strong>energia acumulada no tempo</span></div>
+      <div class="metric"><b>R$</b><span><strong>Custo estimado</strong>com a tarifa e a bandeira informadas</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMO FUNCIONA ============ -->
+<section class="alt" id="como">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker">Como funciona</p>
+      <h2>Do fio da tomada à tela do celular.</h2>
+      <p>O ESP32 mede e calcula. O resultado vai a um broker MQTT, e o painel, aberto no navegador, recebe a mensagem quase na hora. O celular e o ESP32 nunca se falam diretamente, por isso cada um pode estar em uma rede diferente.</p>
+    </div>
+    <div class="flow" role="img" aria-label="Fluxo: sensores, ESP32, broker MQTT, painel no celular">
+      <div class="node"><svg aria-hidden="true"><use href="#i-bolt"/></svg><b>Sensores</b><span>ZMPT101B (tensão)<br>SCT-013 (corrente)</span></div>
+      <div class="link"><span>sinal analógico</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></div>
+      <div class="node hl"><svg aria-hidden="true"><use href="#i-cpu"/></svg><b>ESP32</b><span>amostra, calcula<br>e publica</span></div>
+      <div class="link"><span>Wi-Fi · MQTT</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></div>
+      <div class="node"><svg aria-hidden="true"><use href="#i-wifi"/></svg><b>Broker MQTT</b><span>HiveMQ público<br>intermediário</span></div>
+      <div class="link"><span>WebSocket seguro</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></div>
+      <div class="node"><svg aria-hidden="true"><use href="#i-phone"/></svg><b>Painel web</b><span>GitHub Pages<br>no celular</span></div>
+    </div>
+    <ol class="steps">
+      <li><b>Medir</b>O ESP32 lê tensão e corrente em uma janela de 200 ms, equivalente a 12 ciclos da rede de 60 Hz.</li>
+      <li><b>Calcular</b>Valores eficazes, potência ativa, aparente e reativa, fator de potência e a energia acumulada.</li>
+      <li><b>Publicar</b>Uma mensagem em JSON por segundo, mais o histórico das últimas 24 h guardado no broker.</li>
+      <li><b>Exibir</b>O painel assina os mesmos tópicos, desenha os gráficos e converte kWh em reais.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ HARDWARE ============ -->
+<section id="hardware">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker">Hardware</p>
+      <h2>Poucos componentes, todos acessíveis.</h2>
+      <p>O ESP32 DevKit V1 lê os dois sensores por entradas analógicas. Como o conversor só mede sinais positivos, a saída de cada sensor é centrada em 1,65 V por um divisor de tensão.</p>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>Componente</th><th>Função</th><th>Ligação</th></tr></thead>
+      <tbody>
+        <tr><td><b>ESP32 DevKit V1</b><br><span class="muted small">ESP-WROOM-32 · USB-serial CP2102</span></td><td>Amostra os sensores, calcula as grandezas e publica por Wi-Fi</td><td>Alimentado por USB</td></tr>
+        <tr><td><b>ZMPT101B</b></td><td>Sensor de tensão com transformador isolado e ganho ajustável por trimpot</td><td>Saída em <code>GPIO34</code></td></tr>
+        <tr><td><b>SCT-013-005</b></td><td>Transformador de corrente não invasivo (5 A = 1 V)</td><td>Saída em <code>GPIO35</code>, com bias de 1,65 V</td></tr>
+        <tr><td><b>Divisor de bias</b></td><td>Dois resistores de 15 kΩ e um capacitor de 10 µF levam o sinal ao meio da faixa do ADC</td><td><code>3V3</code> e <code>GND</code></td></tr>
+        <tr><td><b>LED da placa</b></td><td>Indica o estado: pisca rápido (sem Wi-Fi), pisca devagar (sem broker), aceso (online)</td><td><code>GPIO2</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3 style="margin:44px 0 16px">Bancada de testes</h3>
+    <div class="photos">
+      <figure><img loading="lazy" src="img/bancada-geral.jpg" width="900" height="1200" alt="Bancada com o ESP32 ligado por USB, protoboard vermelha, módulo ZMPT101B e uma fonte de bancada."><figcaption>Visão geral: ESP32 ligado por USB, protoboard, módulo de tensão e fonte de bancada.</figcaption></figure>
+      <figure><img loading="lazy" src="img/bancada-protoboard.jpg" width="900" height="1200" alt="Protoboard vermelha com dois resistores e um capacitor eletrolítico do divisor de bias."><figcaption>Protoboard com o divisor de bias: dois resistores e o capacitor eletrolítico.</figcaption></figure>
+      <figure><img loading="lazy" src="img/bancada-zmpt101b.jpg" width="900" height="1200" alt="Módulo ZMPT101B azul com os fios de sinal conectados."><figcaption>Módulo ZMPT101B com o trimpot de ajuste de ganho e os fios de sinal.</figcaption></figure>
+    </div>
+    <div class="note" style="margin-top:28px"><svg aria-hidden="true"><use href="#i-alert"/></svg><p><b>Segurança.</b> A rede elétrica é perigosa. A montagem final deve ficar em caixa fechada, com proteção, e a fiação só deve ser manipulada com tudo desligado da tomada. O sensor de corrente suporta no máximo 5 A (cerca de 635 W em 127 V).</p></div>
+  </div>
+</section>
+
+<!-- ============ SOFTWARE ============ -->
+<section class="alt" id="software">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker">Software</p>
+      <h2>Firmware, protocolo e aplicação.</h2>
+      <p>Três partes independentes se conectam apenas pelo protocolo MQTT. Dá para trocar uma delas sem mexer nas outras.</p>
+    </div>
+    <div class="grid g3">
+      <div class="card"><div class="ic"><svg aria-hidden="true"><use href="#i-cpu"/></svg></div><h3>Firmware do ESP32</h3><p class="muted">Escrito em Arduino (C++) com a biblioteca PubSubClient. Mede, calcula, publica a cada segundo, guarda a energia acumulada na memória e reconecta sozinho se a rede cair.</p></div>
+      <div class="card"><div class="ic"><svg aria-hidden="true"><use href="#i-wifi"/></svg></div><h3>Protocolo MQTT</h3><p class="muted">Publicação e assinatura por tópicos. Mensagens retidas entregam o histórico a quem abre o painel depois, e o <em>Last Will</em> avisa quando o medidor cai.</p></div>
+      <div class="card"><div class="ic"><svg aria-hidden="true"><use href="#i-phone"/></svg></div><h3>Aplicação web</h3><p class="muted">Um único arquivo HTML com JavaScript, sem instalação. Funciona no navegador do celular e é publicada no GitHub Pages a cada atualização do repositório.</p></div>
+    </div>
+
+    <div class="grid g2" style="margin-top:34px;align-items:start">
+      <div>
+        <h3>Tópicos MQTT</h3>
+        <div class="tbl"><table style="min-width:0">
+          <thead><tr><th>Tópico</th><th>Conteúdo</th></tr></thead>
+          <tbody>
+            <tr><td><code>…/data</code></td><td>Medição em JSON, uma por segundo</td></tr>
+            <tr><td><code>…/status</code></td><td><code>online</code> ou <code>offline</code> (retida)</td></tr>
+            <tr><td><code>…/history</code></td><td>Potência média por minuto das últimas 24 h (retida)</td></tr>
+            <tr><td><code>…/cmd</code></td><td>Comandos para o medidor, como <code>reset</code></td></tr>
+          </tbody>
+        </table></div>
+        <p class="muted small" style="margin-top:10px">Todos os tópicos ficam sob <code>usf-tcc-energia/&lt;id-do-medidor&gt;/</code>.</p>
+      </div>
+      <div>
+        <h3>Formato da mensagem</h3>
+        <div class="term"><div class="bar"><i></i><i></i><i></i><span>…/data (exemplo de formato)</span></div>
+<pre><span class="c">// um objeto por segundo</span>
+{
+  <span class="k">"v"</span>: <span class="v">127.0</span>,    <span class="c">// tensão eficaz (V)</span>
+  <span class="k">"i"</span>: <span class="v">0.472</span>,    <span class="c">// corrente eficaz (A)</span>
+  <span class="k">"p"</span>: <span class="v">59.7</span>,     <span class="c">// potência ativa (W)</span>
+  <span class="k">"s"</span>: <span class="v">59.9</span>,     <span class="c">// potência aparente (VA)</span>
+  <span class="k">"q"</span>: <span class="v">4.2</span>,      <span class="c">// potência reativa (var)</span>
+  <span class="k">"pf"</span>: <span class="v">1.00</span>,    <span class="c">// fator de potência</span>
+  <span class="k">"kwh"</span>: <span class="v">0.00012</span> <span class="c">// energia acumulada</span>
+}</pre></div>
+      </div>
+    </div>
+
+    <h3 style="margin:48px 0 4px">Telas da aplicação</h3>
+    <p class="muted small" style="margin-bottom:6px">Capturas feitas no modo demonstração, com dados simulados.</p>
+    <div class="shots" tabindex="0" aria-label="Galeria de telas, role para o lado">
+      <figure><img loading="lazy" src="img/tela_inicio.jpg" width="750" height="1624" alt="Tela inicial com potência atual e métricas."><figcaption>Início</figcaption></figure>
+      <figure><img loading="lazy" src="img/tela_grafico_24h.jpg" width="750" height="1624" alt="Gráfico de consumo acumulado nas últimas 24 horas com a meta."><figcaption>Gráfico de 24 h com meta</figcaption></figure>
+      <figure><img loading="lazy" src="img/tela_grafico_1h.jpg" width="750" height="1624" alt="Gráfico da última hora."><figcaption>Última hora</figcaption></figure>
+      <figure><img loading="lazy" src="img/tela_grafico_ao_vivo.jpg" width="750" height="1624" alt="Gráfico ao vivo da potência."><figcaption>Ao vivo</figcaption></figure>
+      <figure><img loading="lazy" src="img/tela_ajustes.jpg" width="750" height="1624" alt="Tela de ajustes com tarifa, bandeira tarifária e meta."><figcaption>Tarifa, bandeira e meta</figcaption></figure>
+      <figure><img loading="lazy" src="img/tela_alerta.jpg" width="750" height="1624" alt="Alerta de sobrecarga do sensor."><figcaption>Alerta de sobrecarga</figcaption></figure>
+      <figure><img loading="lazy" src="img/tela_tema_escuro.jpg" width="750" height="1624" alt="Painel no tema escuro."><figcaption>Tema escuro</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAINEL ============ -->
+<section id="painel">
+  <div class="wrap demo">
+    <div>
+      <p class="kicker">Painel</p>
+      <h2>Experimente agora.</h2>
+      <p class="muted" style="font-size:17.5px">Ao lado está o painel real, em modo demonstração, com cargas simuladas que ligam e desligam. Não precisa de hardware.</p>
+      <ul class="ticks">
+        <li>Custo com a <b>tarifa da sua distribuidora</b> e a bandeira do mês</li>
+        <li><b>Meta</b> mensal com acompanhamento no gráfico</li>
+        <li>Gráficos de 24 h, 1 h e ao vivo</li>
+        <li><b>Comparação</b> do consumo de cada equipamento</li>
+        <li>Alerta quando a carga passa de 90% do limite do sensor</li>
+      </ul>
+      <div class="cta">
+        <a class="btn pri" href="painel/">Abrir o painel <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <a class="btn sec" href="painel/?demo=1">Só a demonstração</a>
+      </div>
+      <p class="muted small" style="margin-top:16px">Para ver os dados de um medidor real, informe o ID do dispositivo em <b>Ajustes</b>.</p>
+    </div>
+    <div class="phone"><iframe src="painel/?demo=1" title="Painel do medidor em modo demonstração" loading="lazy"></iframe></div>
+  </div>
+</section>
+
+<!-- ============ RESULTADOS ============ -->
+<section class="alt" id="resultados">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker">Resultados e validação</p>
+      <h2>Em que ponto estamos.</h2>
+      <p>O sistema já mede e publica. A etapa atual é a calibração e a comparação das leituras com instrumentos de referência.</p>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>Etapa</th><th>Situação</th></tr></thead>
+      <tbody>
+        <tr><td>Firmware do ESP32 (medição, cálculo, MQTT)</td><td><span class="tag ok">Concluído</span></td></tr>
+        <tr><td>Aplicação web e publicação no GitHub Pages</td><td><span class="tag ok">Concluído</span></td></tr>
+        <tr><td>Calibração da tensão (ZMPT101B) contra multímetro</td><td><span class="tag ok">Concluído</span></td></tr>
+        <tr><td>Calibração da corrente (SCT-013) com cargas conhecidas</td><td><span class="tag wip">Em andamento</span></td></tr>
+        <tr><td>Ensaios de potência com cargas reais</td><td><span class="tag wip">Em andamento</span></td></tr>
+        <tr><td>Análise dos erros e conclusões do TCC</td><td><span class="tag next">Próximo</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="grid g2" style="margin-top:30px;align-items:start">
+      <div class="card">
+        <h3>Calibração da tensão</h3>
+        <p class="muted">A constante <code>CAL_V</code> converte as contagens do ADC em volts. Ela é corrigida pela razão entre o valor do multímetro e o lido pelo ESP32.</p>
+        <div class="term"><div class="bar"><i></i><i></i><i></i><span>cálculo</span></div>
+<pre><span class="c"># multímetro: 126 V | ESP32: 480 V | CAL_V inicial: 0,25</span>
+CAL_V = 0,25 × 126 ÷ 480
+CAL_V = <span class="v">0,0656</span> V/contagem</pre></div>
+      </div>
+      <div class="card">
+        <h3>Como os ensaios serão avaliados</h3>
+        <p class="muted">Cada carga é medida com o ESP32 e com um instrumento de referência. O erro relativo da potência é:</p>
+        <p style="font-size:17px;margin:0 0 10px"><code>erro (%) = (P<sub>medida</sub> − P<sub>ref</sub>) ÷ P<sub>ref</sub> × 100</code></p>
+        <p class="muted small">Também serão calculados a média, o desvio-padrão e a repetibilidade de cada condição.</p>
+      </div>
+    </div>
+
+    <h3 style="margin:38px 0 14px">Tabela de ensaios</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Carga</th><th class="num">P nominal (W)</th><th class="num">P referência (W)</th><th class="num">P medida (W)</th><th class="num">Erro (%)</th></tr></thead>
+      <tbody>
+        <tr><td>Lâmpada 60 W</td><td class="num">60</td><td class="num pend">a medir</td><td class="num pend">a medir</td><td class="num pend">—</td></tr>
+        <tr><td>Duas lâmpadas 60 W</td><td class="num">120</td><td class="num pend">a medir</td><td class="num pend">a medir</td><td class="num pend">—</td></tr>
+        <tr><td>Chapinha 40 W</td><td class="num">40</td><td class="num pend">a medir</td><td class="num pend">a medir</td><td class="num pend">—</td></tr>
+        <tr><td>Ventilador 40 W</td><td class="num">40</td><td class="num pend">a medir</td><td class="num pend">a medir</td><td class="num pend">—</td></tr>
+        <tr><td>Carregador de celular</td><td class="num">—</td><td class="num pend">a medir</td><td class="num pend">a medir</td><td class="num pend">—</td></tr>
+      </tbody>
+    </table></div>
+    <p class="muted small" style="margin-top:10px">Os resultados serão publicados nesta tabela depois dos ensaios de bancada.</p>
+  </div>
+</section>
+
+<!-- ============ RELACIONADOS ============ -->
+<section id="relacionados">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker">Trabalhos relacionados</p>
+      <h2>Ponto de partida: o WiseWatt.</h2>
+      <p>O WiseWatt – Fast Management Energy System, trabalho de graduação da Engenharia Elétrica da mesma universidade, também mede tensão e corrente para acompanhar o consumo. Este projeto parte da mesma ideia e muda a arquitetura.</p>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th></th><th>WiseWatt</th><th>Este projeto</th></tr></thead>
+      <tbody>
+        <tr><td><b>Microcontrolador</b></td><td>ESP8266 (módulo ESP-01)</td><td>ESP32 DevKit V1</td></tr>
+        <tr><td><b>Sensor de corrente</b></td><td>ACS712, em série com a carga</td><td>SCT-013-005, não invasivo</td></tr>
+        <tr><td><b>Sensor de tensão</b></td><td>ZMPT101B</td><td>ZMPT101B</td></tr>
+        <tr><td><b>Comunicação</b></td><td>HTTP para uma API em Python</td><td>MQTT com broker</td></tr>
+        <tr><td><b>Armazenamento</b></td><td>Banco de dados SQL Server</td><td>Histórico de 24 h retido no broker</td></tr>
+        <tr><td><b>Interface</b></td><td>Painel web com Chart.js</td><td>Aplicação web de arquivo único, sem servidor próprio</td></tr>
+      </tbody>
+    </table></div>
+    <div class="note info" style="margin-top:22px"><svg aria-hidden="true"><use href="#i-info"/></svg><p>No WiseWatt, a validação comparou o sistema com um multímetro em três cargas (airfryer, desktop e micro-ondas) e obteve taxas de confiabilidade entre 97% e 99%. Esse é o nível de referência que os ensaios deste projeto buscam comparar.</p></div>
+    <p class="muted small" style="margin-top:14px">Fonte: SILVA, T. R.; SILVA, W. C.; CAVALARO, F. <i>WiseWatt – Fast Management Energy System: um sistema inovador para o gerenciamento on time de consumo de energia elétrica</i>. Universidade São Francisco, Campus Bragança Paulista.</p>
+  </div>
+</section>
+
+<!-- ============ EQUIPE ============ -->
+<section class="alt" id="equipe">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker">Equipe</p>
+      <h2>Quem fez.</h2>
+      <p>Trabalho de Conclusão de Curso da Universidade São Francisco, Campus Bragança Paulista.</p>
+    </div>
+    <div class="grid g3">
+      <div class="card person"><div class="avatar" aria-hidden="true">BP</div><div><b>Bárbara Paris</b><span>Autora</span></div></div>
+      <div class="card person"><div class="avatar" aria-hidden="true">IS</div><div><b>Ingrid Morais dos Santos</b><span>Autora</span></div></div>
+      <div class="card person"><div class="avatar" aria-hidden="true">JV</div><div><b>Prof. João Alex Franciscon Vaz</b><span>Orientador</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DOCUMENTAÇÃO ============ -->
+<section id="documentacao">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker">Documentação</p>
+      <h2>Código aberto e reproduzível.</h2>
+      <p>Todo o software está em um repositório público. Dá para montar o seu próprio medidor seguindo o README.</p>
+    </div>
+    <div class="grid g2">
+      <a class="card doc" href="https://github.com/vitorduartezanardi/tcc-monitor-energia-usf"><div class="ic"><svg aria-hidden="true"><use href="#i-github"/></svg></div><div><h3>Repositório no GitHub</h3><p>Código, firmware, workflow e instruções.</p></div></a>
+      <a class="card doc" href="https://github.com/vitorduartezanardi/tcc-monitor-energia-usf/blob/main/firmware/energy_monitor/energy_monitor_ingrid_barbara.ino"><div class="ic"><svg aria-hidden="true"><use href="#i-cpu"/></svg></div><div><h3>Firmware do ESP32</h3><p>Arquivo <code>.ino</code> para a placa DevKit V1.</p></div></a>
+      <a class="card doc" href="https://github.com/vitorduartezanardi/tcc-monitor-energia-usf/blob/main/app/index.html"><div class="ic"><svg aria-hidden="true"><use href="#i-code"/></svg></div><div><h3>Código do painel</h3><p>Aplicação web completa em um arquivo.</p></div></a>
+      <a class="card doc" href="https://github.com/vitorduartezanardi/tcc-monitor-energia-usf/tree/main/tools"><div class="ic"><svg aria-hidden="true"><use href="#i-book"/></svg></div><div><h3>Ferramentas de teste</h3><p>Simulador do ESP32 e assinante MQTT, em Node.js.</p></div></a>
+    </div>
+    <h3 style="margin:40px 0 14px">Limitações</h3>
+    <div class="grid g3">
+      <div class="card"><div class="ic"><svg aria-hidden="true"><use href="#i-shield"/></svg></div><h3>Broker público</h3><p class="muted small">O HiveMQ público não tem senha. Quem souber o identificador do medidor consegue ler os dados, que são só de potência. Um produto real usaria autenticação e TLS.</p></div>
+      <div class="card"><div class="ic"><svg aria-hidden="true"><use href="#i-bolt"/></svg></div><h3>Limite do sensor</h3><p class="muted small">O SCT-013-005 mede até 5 A, cerca de 635 W em 127 V. Cargas maiores, como chuveiros, exigem outro sensor.</p></div>
+      <div class="card"><div class="ic"><svg aria-hidden="true"><use href="#i-info"/></svg></div><h3>Custo estimado</h3><p class="muted small">O valor em reais é uma estimativa para conscientização e não substitui o medidor da concessionária.</p></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <p><b>Medidor de Energia · ESP32 + MQTT</b></p>
+      <p>Universidade São Francisco · Campus Bragança Paulista · 2026</p>
+    </div>
+    <div>
+      <p><a href="https://github.com/vitorduartezanardi/tcc-monitor-energia-usf">Repositório no GitHub</a></p>
+      <p><a href="#topo">Voltar ao topo</a></p>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

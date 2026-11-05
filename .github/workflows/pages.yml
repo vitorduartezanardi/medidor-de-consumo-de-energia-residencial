@@ -1,4 +1,4 @@
-name: Publicar aplicativo no GitHub Pages
+name: Publicar site e aplicativo no GitHub Pages
 on:
   push:
     branches: [main]
@@ -19,8 +19,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Montar o site (site/ na raiz, painel em /painel)
+        run: |
+          mkdir _site
+          cp -r site/. _site/
+          cp -r app _site/painel
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: app
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
