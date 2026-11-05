@@ -263,3 +263,7 @@ nav.menu a.cta-nav:hover{filter:brightness(1.08)}
 }
 @media (min-width:1500px){:root{--max:1280px}}
 @media (max-width:999px){.shots figure{flex:0 0 200px}}
+
+/* garantia contra imagens esticadas em navegadores móveis */
+.phone img,.shots img,.photos img{height:auto!important}
+.phone img{aspect-ratio:750/1624;object-fit:cover}
