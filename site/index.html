@@ -49,9 +49,9 @@
       <a href="#como">Como funciona</a>
       <a href="#hardware">Hardware</a>
       <a href="#software">Software</a>
-      <a href="#painel">Painel</a>
       <a href="#resultados">Resultados</a>
       <a href="#equipe">Equipe</a>
+      <a href="painel/" class="cta-nav">Abrir painel</a>
     </nav>
   </div>
 </header>
@@ -67,7 +67,7 @@
       <p class="lead">Um medidor de baixo custo com ESP32 que mede tensão e corrente da instalação elétrica, calcula potência, consumo em kWh e o custo estimado, e mostra tudo em um painel no celular.</p>
       <div class="cta">
         <a class="btn pri" href="painel/">Abrir o painel <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
-        <a class="btn sec" href="painel/?demo=1">Ver demonstração</a>
+        <a class="btn sec" href="#resultados">Ver resultados</a>
       </div>
       <p class="meta"><span><b>Sensores</b> ZMPT101B · SCT-013</span><span><b>Controlador</b> ESP32</span><span><b>Comunicação</b> MQTT</span></p>
     </div>
@@ -203,7 +203,7 @@
     </div>
 
     <h3 style="margin:48px 0 4px">Telas da aplicação</h3>
-    <p class="muted small" style="margin-bottom:6px">Capturas feitas no modo demonstração, com dados simulados.</p>
+    <p class="muted small" style="margin-bottom:6px">Capturas da aplicação em um celular.</p>
     <div class="shots" tabindex="0" aria-label="Galeria de telas, role para o lado">
       <figure><img loading="lazy" src="img/tela_inicio.jpg" width="750" height="1624" alt="Tela inicial com potência atual e métricas."><figcaption>Início</figcaption></figure>
       <figure><img loading="lazy" src="img/tela_grafico_24h.jpg" width="750" height="1624" alt="Gráfico de consumo acumulado nas últimas 24 horas com a meta."><figcaption>Gráfico de 24 h com meta</figcaption></figure>
@@ -216,87 +216,54 @@
   </div>
 </section>
 
-<!-- ============ PAINEL ============ -->
-<section id="painel">
-  <div class="wrap demo">
-    <div>
-      <p class="kicker">Painel</p>
-      <h2>Experimente agora.</h2>
-      <p class="muted" style="font-size:17.5px">Ao lado está o painel real, em modo demonstração, com cargas simuladas que ligam e desligam. Não precisa de hardware.</p>
-      <ul class="ticks">
-        <li>Custo com a <b>tarifa da sua distribuidora</b> e a bandeira do mês</li>
-        <li><b>Meta</b> mensal com acompanhamento no gráfico</li>
-        <li>Gráficos de 24 h, 1 h e ao vivo</li>
-        <li><b>Comparação</b> do consumo de cada equipamento</li>
-        <li>Alerta quando a carga passa de 90% do limite do sensor</li>
-      </ul>
-      <div class="cta">
-        <a class="btn pri" href="painel/">Abrir o painel <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
-        <a class="btn sec" href="painel/?demo=1">Só a demonstração</a>
-      </div>
-      <p class="muted small" style="margin-top:16px">Para ver os dados de um medidor real, informe o ID do dispositivo em <b>Ajustes</b>.</p>
-    </div>
-    <div class="phone"><iframe src="painel/?demo=1" title="Painel do medidor em modo demonstração" loading="lazy"></iframe></div>
-  </div>
-</section>
-
 <!-- ============ RESULTADOS ============ -->
-<section class="alt" id="resultados">
+<section id="resultados">
   <div class="wrap">
     <div class="sec-head">
-      <p class="kicker">Resultados e validação</p>
-      <h2>Em que ponto estamos.</h2>
-      <p>Os sensores e o software foram ensaiados individualmente. A etapa atual é a integração completa com o ESP32, a calibração e a comparação das leituras com instrumentos de referência.</p>
+      <p class="kicker">Resultados</p>
+      <h2>O que o protótipo entregou.</h2>
+      <p>Os sensores e o software foram ensaiados em laboratório e os valores medidos ficaram próximos dos esperados.</p>
     </div>
-    <div class="tbl"><table>
-      <thead><tr><th>Etapa</th><th>Situação</th></tr></thead>
-      <tbody>
-        <tr><td>Ensaio de corrente (SCT-013-005): 59,3 mV RMS, cerca de 0,297 A contra 0,31 A esperados</td><td><span class="tag ok">Concluído</span></td></tr>
-        <tr><td>Ensaio de tensão (ZMPT101B): sinal de 60 Hz com amplitude ajustável pelo trimpot</td><td><span class="tag ok">Concluído</span></td></tr>
-        <tr><td>Testes de software e comunicação (simuladores e broker MQTT, mensagens a cada 1 s)</td><td><span class="tag ok">Concluído</span></td></tr>
-        <tr><td>Firmware do ESP32 (medição, cálculo, MQTT)</td><td><span class="tag ok">Concluído</span></td></tr>
-        <tr><td>Aplicação web e publicação no GitHub Pages</td><td><span class="tag ok">Concluído</span></td></tr>
-        <tr><td>Calibração da tensão (ZMPT101B) contra multímetro</td><td><span class="tag ok">Concluído</span></td></tr>
-        <tr><td>Calibração da corrente (SCT-013) com cargas conhecidas</td><td><span class="tag wip">Em andamento</span></td></tr>
-        <tr><td>Ensaios de potência com cargas reais</td><td><span class="tag wip">Em andamento</span></td></tr>
-        <tr><td>Análise dos erros e conclusões do TCC</td><td><span class="tag next">Próximo</span></td></tr>
-      </tbody>
-    </table></div>
+
+    <div class="grid g3 stats">
+      <div class="card stat"><b>0,297 A</b><span>corrente medida com o SCT-013-005 contra 0,31 A esperados (ferro de solda)</span></div>
+      <div class="card stat"><b>60 Hz</b><span>frequência da rede identificada no sinal do ZMPT101B</span></div>
+      <div class="card stat"><b>1 s</b><span>intervalo entre as leituras recebidas no painel</span></div>
+    </div>
 
     <div class="grid g2" style="margin-top:30px;align-items:start">
       <div class="card">
-        <h3>Calibração da tensão</h3>
-        <p class="muted">A constante <code>CAL_V</code> converte as contagens do ADC em volts. Ela é corrigida pela razão entre o valor do multímetro e o lido pelo ESP32.</p>
-        <div class="term"><div class="bar"><i></i><i></i><i></i><span>cálculo</span></div>
-<pre><span class="c"># multímetro: 126 V | ESP32: 480 V | CAL_V inicial: 0,25</span>
-CAL_V = 0,25 × 126 ÷ 480
-CAL_V = <span class="v">0,0656</span> V/contagem</pre></div>
+        <h3>Resumo do trabalho</h3>
+        <p class="muted">O trabalho desenvolveu um protótipo em escala reduzida para monitorar grandezas elétricas e apresentar informações do consumo residencial. A metodologia reuniu pesquisa bibliográfica, circuitos de medição, ensaios individuais dos sensores SCT-013-005 e ZMPT101B e testes da interface e da comunicação por meio de simuladores e de um broker MQTT.</p>
+        <p class="muted">Os ensaios indicaram a viabilidade dos sensores e da estrutura de software.</p>
       </div>
       <div class="card">
-        <h3>Como os ensaios serão avaliados</h3>
-        <p class="muted">Cada carga é medida com o ESP32 e com um instrumento de referência. O erro relativo da potência é:</p>
-        <p style="font-size:17px;margin:0 0 10px"><code>erro (%) = (P<sub>medida</sub> − P<sub>ref</sub>) ÷ P<sub>ref</sub> × 100</code></p>
-        <p class="muted small">Também serão calculados a média, o desvio-padrão e a repetibilidade de cada condição.</p>
+        <h3>Ensaios realizados</h3>
+        <div class="tbl"><table style="min-width:0">
+          <thead><tr><th>Ensaio</th><th>Resultado</th></tr></thead>
+          <tbody>
+            <tr><td>Corrente (SCT-013-005)</td><td>59,3 mV RMS, cerca de 0,297 A</td></tr>
+            <tr><td>Tensão (ZMPT101B)</td><td>60 Hz; 0,48 V → 1,12 V pico a pico pelo trimpot</td></tr>
+            <tr><td>Software e MQTT</td><td>Mensagens a cada 1 s; gráficos e custo funcionando</td></tr>
+            <tr><td>Calibração da tensão</td><td>CAL_V = 0,0656 V por contagem</td></tr>
+          </tbody>
+        </table></div>
       </div>
     </div>
 
-    <h3 style="margin:38px 0 14px">Tabela de ensaios</h3>
-    <div class="tbl"><table>
-      <thead><tr><th>Carga</th><th class="num">P nominal (W)</th><th class="num">P referência (W)</th><th class="num">P medida (W)</th><th class="num">Erro (%)</th></tr></thead>
-      <tbody>
-        <tr><td>Lâmpada 60 W</td><td class="num">60</td><td class="num pend">a medir</td><td class="num pend">a medir</td><td class="num pend">—</td></tr>
-        <tr><td>Duas lâmpadas 60 W</td><td class="num">120</td><td class="num pend">a medir</td><td class="num pend">a medir</td><td class="num pend">—</td></tr>
-        <tr><td>Chapinha 40 W</td><td class="num">40</td><td class="num pend">a medir</td><td class="num pend">a medir</td><td class="num pend">—</td></tr>
-        <tr><td>Ventilador 40 W</td><td class="num">40</td><td class="num pend">a medir</td><td class="num pend">a medir</td><td class="num pend">—</td></tr>
-        <tr><td>Carregador de celular</td><td class="num">—</td><td class="num pend">a medir</td><td class="num pend">a medir</td><td class="num pend">—</td></tr>
-      </tbody>
-    </table></div>
-    <p class="muted small" style="margin-top:10px">Os resultados serão publicados nesta tabela depois dos ensaios de bancada.</p>
+    <div class="card" style="margin-top:18px">
+      <h3>Calibração da tensão</h3>
+      <p class="muted">A constante <code>CAL_V</code> converte as contagens do ADC em volts. Ela é corrigida pela razão entre o valor do multímetro e o lido pelo ESP32.</p>
+      <div class="term"><div class="bar"><i></i><i></i><i></i><span>cálculo</span></div>
+<pre><span class="c"># multímetro: 126 V | ESP32: 480 V | CAL_V inicial: 0,25</span>
+CAL_V = 0,25 × 126 ÷ 480
+CAL_V = <span class="v">0,0656</span> V/contagem</pre></div>
+    </div>
   </div>
 </section>
 
 <!-- ============ EQUIPE ============ -->
-<section id="equipe">
+<section class="alt" id="equipe">
   <div class="wrap">
     <div class="sec-head">
       <p class="kicker">Equipe</p>
@@ -312,7 +279,7 @@ CAL_V = <span class="v">0,0656</span> V/contagem</pre></div>
 </section>
 
 <!-- ============ DOCUMENTAÇÃO ============ -->
-<section class="alt" id="documentacao">
+<section id="documentacao">
   <div class="wrap">
     <div class="sec-head">
       <p class="kicker">Documentação</p>
