@@ -1,4 +1,4 @@
-# Medidor de Consumo de Energia (ESP32 + MQTT)
+# Medidor de Consumo de Energia Residencial (ESP32 + MQTT)
 
 TCC de Engenharia Elétrica — Universidade São Francisco. O ESP32 mede tensão (ZMPT101B) e corrente (SCT-013-005), calcula V, I, P, Q, S, FP e energia, e publica via MQTT; a aplicação web (GitHub Pages) exibe potência, consumo e custo.
 

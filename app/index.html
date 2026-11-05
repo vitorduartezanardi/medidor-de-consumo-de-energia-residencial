@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f6f3ee">
-<title>Medidor de Energia</title>
+<title>Medidor de Consumo de Energia Residencial</title>
 <style>
 :root{--bg:#f6f3ee;--card:#fff;--text:#1b1f24;--muted:#7a828c;--line:#ebe7df;--blue:#4b78b8;--blue2:#b9cde6;--banner:#b7c9e2;--bannerText:#1d2b40;--tree:#9db6d6;--ok:#2e9e5b;--warn:#e08a1e;--bad:#d64545;--soft:#f1eee8}
 @media (prefers-color-scheme:dark){:root{--bg:#111316;--card:#1b1f24;--text:#eceff3;--muted:#8d97a3;--line:#2a3038;--blue:#6a9be0;--blue2:#2c4467;--banner:#26384f;--bannerText:#e6eefa;--tree:#3b5679;--soft:#242a31}}
@@ -78,6 +78,33 @@ input,select{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--li
 .form label span{display:block;margin-bottom:4px}
 .eff{background:var(--soft);border-radius:12px;padding:10px 12px;font-size:.88rem}
 .link{color:var(--bad);font-size:.85rem;padding:10px 0}
+.nav{display:flex;gap:4px;background:var(--soft);border-radius:99px;padding:4px;margin:2px 0 14px;position:sticky;top:8px;z-index:5}
+.nav button{flex:1;padding:8px 6px;border-radius:99px;font-size:.82rem;color:var(--muted);font-weight:600}
+.nav button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.view[hidden]{display:none}
+.doc h2{font-size:1.15rem;margin:18px 4px 8px}.doc h2:first-child{margin-top:4px}
+.doc p,.doc li{font-size:.9rem;color:var(--text)}.doc p{margin:0 0 10px}.doc ul,.doc ol{margin:0 0 10px;padding-left:20px}
+.doc .muted{color:var(--muted);font-size:.8rem}
+.doc details{border-top:1px solid var(--line);padding:2px 0}.doc details:first-of-type{border-top:0}
+.doc summary{cursor:pointer;font-weight:600;font-size:.95rem;padding:11px 0;list-style:none;display:flex;justify-content:space-between;gap:10px}
+.doc summary::-webkit-details-marker{display:none}
+.doc summary::after{content:"+";color:var(--muted);font-weight:400;font-size:1.2rem;line-height:1}
+.doc details[open] summary::after{content:"–"}
+.doc details>div{padding:0 0 12px}
+.doc table{width:100%;border-collapse:collapse;font-size:.82rem;margin:4px 0 10px}
+.doc th,.doc td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.doc th{color:var(--muted);font-weight:600;font-size:.72rem}
+.doc .tw{overflow-x:auto}
+.doc code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:.84em}
+.doc a{color:var(--blue)}
+.note{background:var(--soft);border-radius:14px;padding:10px 12px;font-size:.82rem;margin:0 0 10px}
+.flags{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 10px}
+.flag{border-radius:14px;padding:10px 12px;font-size:.8rem;border:1px solid var(--line)}
+.flag b{display:block;font-size:.9rem}.flag i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.steps{counter-reset:s;list-style:none;padding:0!important}
+.steps li{counter-increment:s;position:relative;padding-left:32px;margin-bottom:8px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--blue2);color:var(--blue);font-weight:700;font-size:.78rem;display:grid;place-items:center}
+body.wide main{max-width:760px}
 footer{text-align:center;font-size:.68rem;color:var(--muted);margin-top:18px}
 </style>
 </head>
@@ -90,7 +117,13 @@ footer{text-align:center;font-size:.68rem;color:var(--muted);margin-top:18px}
     <div class="status"><span class="dot" id="dot"></span><span id="st">conectando</span></div>
     <button class="icon" id="menu" aria-label="Ajustes">⋮</button>
   </header>
+  <nav class="nav" id="nav" aria-label="Seções">
+    <button data-v="painel" class="on">Painel</button>
+    <button data-v="info">Informativos</button>
+    <button data-v="doc">Documentação</button>
+  </nav>
 
+  <div class="view" id="v-painel">
   <section class="banner">
     <p id="msg">Conectando ao medidor…</p>
     <svg width="130" height="90" viewBox="0 0 130 90" fill="var(--tree)"><ellipse cx="40" cy="38" rx="17" ry="26"/><rect x="38" y="60" width="4" height="30"/><ellipse cx="72" cy="48" rx="13" ry="20"/><rect x="70" y="64" width="4" height="26"/><ellipse cx="102" cy="42" rx="12" ry="22"/><rect x="100" y="62" width="3" height="28"/><rect x="0" y="86" width="130" height="4"/></svg>
@@ -135,6 +168,176 @@ footer{text-align:center;font-size:.68rem;color:var(--muted);margin-top:18px}
     <div id="eqlist"></div>
     <p class="hint">Ligue o equipamento, espere a leitura estabilizar e toque em Registrar. A projeção mensal usa as horas de uso por dia dos ajustes.</p>
   </section>
+  </div>
+  <div class="view doc" id="v-info" hidden>
+    <section class="card">
+      <h2>Entenda sua energia</h2>
+      <p>Explicações simples para ler a conta de luz, escolher aparelhos mais econômicos e usar melhor os números deste painel.</p>
+    </section>
+
+    <section class="card">
+      <details open><summary>Etiqueta de eficiência energética (ENCE / Inmetro)</summary><div>
+        <p>A <b>ENCE</b> (Etiqueta Nacional de Conservação de Energia) é a etiqueta colorida do <b>Inmetro</b> colada em muitos aparelhos: geladeiras, ar-condicionado, máquinas de lavar, fogões, lâmpadas, entre outros. Ela mostra o quanto o aparelho gasta de energia <b>em comparação com outros da mesma categoria</b>.</p>
+        <svg viewBox="0 0 320 170" width="100%" role="img" aria-label="Exemplo ilustrativo de escala de eficiência de A a E" style="max-width:360px;display:block;margin:6px auto 10px">
+          <text x="8" y="14" font-size="11" fill="var(--muted)">Mais eficiente</text>
+          <g font-family="system-ui" font-weight="700" font-size="14" fill="#fff">
+            <path d="M8 22h110l14 12-14 12H8z" fill="#1a9850"/><text x="18" y="40">A</text>
+            <path d="M8 50h140l14 12-14 12H8z" fill="#66bd63"/><text x="18" y="68">B</text>
+            <path d="M8 78h170l14 12-14 12H8z" fill="#c8c228"/><text x="18" y="96" fill="#222">C</text>
+            <path d="M8 106h200l14 12-14 12H8z" fill="#f2994a"/><text x="18" y="124">D</text>
+            <path d="M8 134h230l14 12-14 12H8z" fill="#d64545"/><text x="18" y="152">E</text>
+          </g>
+          <text x="8" y="168" font-size="11" fill="var(--muted)">Menos eficiente · desenho ilustrativo</text>
+        </svg>
+        <ul>
+          <li><b>Letra:</b> quanto mais perto de <b>A</b>, menos energia o aparelho usa para fazer o mesmo serviço.</li>
+          <li><b>Consumo em kWh:</b> a etiqueta traz o consumo médio estimado (por mês, por ciclo ou por ano, dependendo do produto). É esse número que vira dinheiro na conta.</li>
+          <li><b>Só compara iguais:</b> um “A” de geladeira não pode ser comparado a um “A” de ar-condicionado. Compare apenas modelos do mesmo tipo e tamanho.</li>
+        </ul>
+        <div class="note"><b>A escala varia conforme o produto.</b> Muitos itens vão de A a E; alguns usam outras faixas (por exemplo, até G), e o Inmetro revisa as regras de tempos em tempos. Reportagens de 2026 indicam que as geladeiras passaram a exibir apenas as faixas A, B e C, com critérios mais exigentes, e que o varejo pode vender estoque com a etiqueta antiga até o fim de 2026. Confira sempre a etiqueta do produto e a <a href="https://www.gov.br/inmetro/" target="_blank" rel="noopener">página do Inmetro</a>.</div>
+      </div></details>
+
+      <details><summary>Selo Procel</summary><div>
+        <p>O <b>Selo Procel</b> é um reconhecimento <b>voluntário</b> do Programa Nacional de Conservação de Energia Elétrica (Procel), do governo federal. Ele é dado apenas aos modelos <b>mais eficientes de cada categoria</b>, em geral os melhores classificados na etiqueta do Inmetro.</p>
+        <table><thead><tr><th></th><th>Etiqueta ENCE</th><th>Selo Procel</th></tr></thead><tbody>
+          <tr><td><b>Quem emite</b></td><td>Inmetro</td><td>Procel (governo federal)</td></tr>
+          <tr><td><b>É obrigatório?</b></td><td>Sim, nos produtos regulamentados</td><td>Não, é voluntário</td></tr>
+          <tr><td><b>O que mostra</b></td><td>Todos os modelos, de mais a menos eficiente</td><td>Só destaca os melhores da categoria</td></tr>
+        </tbody></table>
+        <p class="muted">Aparelho com selo Procel tende a gastar menos energia, mas o ideal é sempre olhar também o consumo em kWh da etiqueta e o tamanho do aparelho.</p>
+      </div></details>
+
+      <details><summary>Bandeira tarifária: o que é e como funciona</summary><div>
+        <p>A <b>bandeira tarifária</b> é um valor extra na conta de luz que reflete o custo de gerar energia naquele mês. Quando chove pouco e os reservatórios das hidrelétricas ficam baixos, é preciso ligar usinas térmicas, que são mais caras, e a conta sobe. A <b>ANEEL</b> define a cor da bandeira <b>todo mês</b> para todo o país (com anúncio normalmente no fim do mês anterior).</p>
+        <div class="flags">
+          <div class="flag"><b><i style="background:#2e9e5b"></i>Verde</b>Sem cobrança extra.</div>
+          <div class="flag"><b><i style="background:#e0b81e"></i>Amarela</b>+ R$ 1,885 a cada 100 kWh.</div>
+          <div class="flag"><b><i style="background:#d64545"></i>Vermelha 1</b>+ R$ 4,463 a cada 100 kWh.</div>
+          <div class="flag"><b><i style="background:#8f1d1d"></i>Vermelha 2</b>+ R$ 7,877 a cada 100 kWh.</div>
+        </div>
+        <p><b>Exemplo:</b> uma casa que consome 200 kWh num mês com bandeira vermelha 2 paga 2 × R$ 7,877 = <b>cerca de R$ 15,75 a mais</b> (antes de impostos).</p>
+        <p class="muted">Valores de referência da ANEEL usados neste painel (R$ 0,01885, 0,04463 e 0,07877 por kWh). Eles são revistos periodicamente e os impostos incidem sobre o total: confirme na sua conta. Em <b>Ajustes (⋮)</b> você escolhe a bandeira do mês e o painel recalcula o custo.</p>
+      </div></details>
+
+      <details><summary>W, kW e kWh: qual é a diferença?</summary><div>
+        <ul>
+          <li><b>Watt (W)</b>: a <b>potência</b>, ou seja, o quanto o aparelho puxa da tomada <i>naquele instante</i>. 1 kW = 1000 W.</li>
+          <li><b>Quilowatt-hora (kWh)</b>: a <b>energia</b> gasta ao longo do tempo. É o que a distribuidora cobra.</li>
+        </ul>
+        <div class="note"><b>energia (kWh) = potência (kW) × horas de uso</b><br>Um chuveiro de 5500 W (5,5 kW) ligado por 30 min por dia: 5,5 × 0,5 = 2,75 kWh por dia, cerca de <b>82,5 kWh por mês</b>. Com a tarifa de R$ 0,95/kWh isso dá aproximadamente R$ 78 por mês.</div>
+        <p>O painel faz essa conta sozinho: a “Potência agora” é em W, o “Uso” é em kWh e o “Custo” multiplica os kWh pela tarifa efetiva.</p>
+      </div></details>
+
+      <details><summary>Como ler a conta de luz</summary><div>
+        <ul>
+          <li><b>Consumo (kWh):</b> o que você realmente usou no período.</li>
+          <li><b>TE e TUSD:</b> a energia em si (Tarifa de Energia) e o transporte até a sua casa (uso do sistema de distribuição).</li>
+          <li><b>Bandeira tarifária:</b> o adicional do mês, quando a bandeira não é verde.</li>
+          <li><b>Impostos (ICMS, PIS/Cofins):</b> aplicados sobre o valor. Variam por estado.</li>
+          <li><b>Iluminação pública (CIP/COSIP):</b> taxa cobrada pela prefeitura, independente do consumo.</li>
+        </ul>
+        <p>Dica: o valor do kWh que aparece na conta costuma <b>já incluir</b> TE + TUSD. Use esse valor em <b>Ajustes → Tarifa</b> e deixe Impostos em 0 se a conta já mostrar o preço com tributos.</p>
+        <p class="muted">Algumas distribuidoras oferecem a <b>Tarifa Branca</b>, que cobra mais caro nos horários de pico (fim da tarde) e mais barato fora dele. Só compensa para quem consegue concentrar o consumo fora do pico.</p>
+      </div></details>
+
+      <details><summary>Quanto gastam os aparelhos? (valores aproximados)</summary><div>
+        <div class="tw"><table><thead><tr><th>Aparelho</th><th>Potência típica</th><th>Observação</th></tr></thead><tbody>
+          <tr><td>Chuveiro elétrico</td><td>4000 a 7500 W</td><td>Um dos maiores gastos da casa</td></tr>
+          <tr><td>Ar-condicionado 9000 BTU</td><td>700 a 1000 W</td><td>Depende da etiqueta e do uso</td></tr>
+          <tr><td>Ferro de passar</td><td>1000 a 1500 W</td><td>Liga e desliga pelo termostato</td></tr>
+          <tr><td>Micro-ondas</td><td>1000 a 1500 W</td><td>Uso curto, impacto menor</td></tr>
+          <tr><td>Geladeira</td><td>~30 a 60 kWh/mês</td><td>Fica ligada 24 h; veja a etiqueta</td></tr>
+          <tr><td>TV</td><td>60 a 150 W</td><td>Varia com tamanho e tecnologia</td></tr>
+          <tr><td>Ventilador</td><td>50 a 100 W</td><td>Bem mais econômico que o ar-condicionado</td></tr>
+          <tr><td>Lâmpada LED</td><td>5 a 15 W</td><td>Gasta cerca de 80% menos que a incandescente</td></tr>
+          <tr><td>Carregador de celular</td><td>5 a 20 W</td><td>Quase nada</td></tr>
+        </tbody></table></div>
+        <p class="muted">Valores de referência: o consumo real depende do modelo, do uso e da conservação. A melhor forma de saber é <b>medir</b> com este painel. Atenção: o sensor deste protótipo suporta até 5 A (cerca de 635 W em 127 V), então aparelhos como chuveiro e ar-condicionado <b>não devem ser ligados</b> nele.</p>
+      </div></details>
+
+      <details><summary>Dicas para economizar</summary><div>
+        <ul>
+          <li>Troque lâmpadas antigas por <b>LED</b>.</li>
+          <li>Ao comprar, prefira aparelhos com <b>etiqueta A</b> (ou a melhor faixa disponível) e <b>selo Procel</b>.</li>
+          <li>Reduza o <b>tempo de banho</b> e use o chuveiro na posição “verão” sempre que possível.</li>
+          <li>No ar-condicionado, mantenha o filtro limpo e a temperatura em torno de 23 a 24 °C.</li>
+          <li>Não deixe a porta da geladeira aberta nem coloque alimentos quentes dentro dela.</li>
+          <li>Tire da tomada o que não está em uso (<b>standby</b>): TV, videogame, carregadores e roteadores antigos consomem mesmo desligados.</li>
+          <li>Evite usar vários aparelhos de alta potência ao mesmo tempo, principalmente nos horários de pico.</li>
+          <li>Defina uma <b>meta de consumo</b> nos Ajustes e acompanhe a barra de 24 horas.</li>
+        </ul>
+      </div></details>
+
+      <details><summary>Glossário do painel</summary><div>
+        <table><tbody>
+          <tr><td><b>Tensão (V)</b></td><td>“Força” que empurra a corrente. Na tomada residencial costuma ser 127 V ou 220 V.</td></tr>
+          <tr><td><b>Corrente (A)</b></td><td>Quantidade de eletricidade que flui pelo aparelho.</td></tr>
+          <tr><td><b>Potência ativa (W)</b></td><td>A parte da energia que realmente vira trabalho, luz ou calor. É o que você paga.</td></tr>
+          <tr><td><b>Potência aparente (VA)</b></td><td>Tensão × corrente. É o “total” que a rede precisa fornecer.</td></tr>
+          <tr><td><b>Potência reativa (var)</b></td><td>Parte que vai e volta sem virar trabalho, comum em motores e fontes. Não é cobrada em residências.</td></tr>
+          <tr><td><b>Fator de potência</b></td><td>Potência ativa ÷ aparente (0 a 1). Quanto mais perto de 1, melhor o aproveitamento.</td></tr>
+          <tr><td><b>Defasagem (°)</b></td><td>Atraso entre a onda de tensão e a de corrente; relaciona-se ao fator de potência.</td></tr>
+          <tr><td><b>Standby</b></td><td>Aparelho “desligado” que continua ligado na tomada, consumindo pouco o tempo todo.</td></tr>
+        </tbody></table>
+      </div></details>
+    </section>
+    <p class="hint">Conteúdo educativo e simplificado. Para valores oficiais, consulte a ANEEL, o Inmetro, o Procel e a sua distribuidora.</p>
+  </div>
+
+  <div class="view doc" id="v-doc" hidden>
+    <section class="card">
+      <h2>Sobre o projeto</h2>
+      <p><b>Sistema de monitoramento de grandezas elétricas e consumo de energia residencial</b>: protótipo em escala reduzida que mede tensão e corrente, calcula potência e energia, estima o custo e mostra tudo neste painel.</p>
+      <p class="muted">Trabalho de Conclusão de Curso de <b>Bárbara Paris</b> e <b>Ingrid Morais dos Santos</b>, orientação do Prof. <b>João Alex Franciscon Vaz</b>. Universidade São Francisco, Campus Bragança Paulista.</p>
+    </section>
+
+    <section class="card">
+      <h2>Como funciona</h2>
+      <ol class="steps">
+        <li><b>Sensores:</b> o <b>ZMPT101B</b> mede a tensão e o <b>SCT-013-005</b> mede a corrente (limite de 5 A).</li>
+        <li><b>ESP32:</b> lê os sinais, calcula valores eficazes (RMS), potência ativa, aparente, reativa, fator de potência e a energia acumulada.</li>
+        <li><b>MQTT:</b> a cada segundo o ESP32 publica as medições em um broker, pela rede Wi-Fi.</li>
+        <li><b>Painel:</b> este aplicativo web assina as mensagens, desenha os gráficos e calcula o custo com a sua tarifa.</li>
+      </ol>
+      <div class="tw"><table><thead><tr><th>Componente</th><th>Função</th></tr></thead><tbody>
+        <tr><td>ESP32 DevKit V1</td><td>Microcontrolador com Wi-Fi, converte os sinais (ADC 12 bits) e publica via MQTT</td></tr>
+        <tr><td>ZMPT101B</td><td>Módulo sensor de tensão alternada</td></tr>
+        <tr><td>SCT-013-005</td><td>Transformador de corrente (5 A = 1 V), com polarização de 1,65 V</td></tr>
+        <tr><td>Broker MQTT</td><td>Intermediário das mensagens (HiveMQ público ou Mosquitto local)</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section class="card">
+      <h2>Como usar o painel</h2>
+      <ul>
+        <li>O topo mostra a <b>potência agora</b> e o status da conexão (online, offline ou demonstração).</li>
+        <li>O gráfico alterna entre <b>24 horas</b> (acumulado em kWh com a meta), <b>1 hora</b> e <b>ao vivo</b>.</li>
+        <li>Em <b>Uso de energia do equipamento</b>, ligue um aparelho, espere estabilizar e toque em <b>Registrar</b> para ver o custo mensal estimado.</li>
+        <li>No menu <b>⋮</b> ajuste tarifa, bandeira, impostos, horas de uso, meta e o código do medidor.</li>
+        <li>Para ver sem o hardware, use o <b>modo demonstração</b>: adicione <code>?demo=1</code> ao endereço.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Ensaios realizados</h2>
+      <div class="tw"><table><thead><tr><th>Ensaio</th><th>Resultado</th></tr></thead><tbody>
+        <tr><td>Corrente (SCT-013-005 com ferro de solda)</td><td>59,3 mV RMS, o que corresponde a cerca de <b>0,297 A</b>, próximo dos 0,31 A calculados pela potência nominal</td></tr>
+        <tr><td>Tensão (ZMPT101B)</td><td>Sinal com frequência próxima de <b>60 Hz</b>; amplitude ajustável pelo trimpot (de 0,48 V para 1,12 V pico a pico)</td></tr>
+        <tr><td>Software e comunicação</td><td>Mensagens recebidas a cada <b>1 segundo</b>; gráficos, histórico e estimativa de custo funcionando (simuladores e modo demonstração)</td></tr>
+        <tr><td>Calibração de tensão</td><td>Fator ajustado com multímetro (126 V de referência): <b>0,0656 V por contagem</b></td></tr>
+      </tbody></table></div>
+      <div class="note"><b>Limitações atuais:</b> a calibração de corrente e a comparação sistemática com instrumentos de referência ainda estão em andamento; o sensor suporta no máximo 5 A (cerca de 635 W em 127 V); o broker público não tem autenticação, então o código do medidor funciona como um identificador difícil de adivinhar, não como senha.</div>
+    </section>
+
+    <section class="card">
+      <h2>Código e documentação</h2>
+      <ul>
+        <li><a href="https://github.com/vitorduartezanardi/medidor-de-consumo-de-energia-residencial" target="_blank" rel="noopener">Repositório no GitHub</a>: firmware do ESP32 (<code>.ino</code>), este aplicativo e o site.</li>
+        <li><a href="../" >Página de apresentação do projeto</a>.</li>
+      </ul>
+      <p class="muted">Tópicos MQTT: <code>usf-tcc-energia/&lt;id&gt;/{data,status,history,config,cmd}</code></p>
+    </section>
+  </div>
   <footer>Universidade São Francisco · Bragança Paulista</footer>
 </main>
 
@@ -335,9 +538,22 @@ function drawEquip(){
   });
 }
 
+// ---------- abas (Painel / Informativos / Documentação) ----------
+function showView(v){
+  if(!['painel','info','doc'].includes(v)) v='painel';
+  ['painel','info','doc'].forEach(k=>{ $('v-'+k).hidden = k!==v; });
+  [...$('nav').children].forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  document.body.classList.toggle('wide', v!=='painel');
+  try{ history.replaceState(null,'', v==='painel' ? location.pathname+location.search : '#'+v); }catch(e){}
+  scrollTo(0,0);
+  if(v==='painel') requestAnimationFrame(draw);
+}
+$('nav').onclick=e=>{ const b=e.target.closest('button'); if(b) showView(b.dataset.v); };
+addEventListener('hashchange',()=>showView(location.hash.slice(1)));
+
 addEventListener('resize',draw);
 $('devid').addEventListener('change',()=>{ const v=$('devid').value.replace(/[^A-Za-z0-9_-]/g,''); if(!v) return; devId=v; store.set('devid',v); live=[]; hist=[]; last=null; connect(); });
-fillForm(); renderAll(); connect();
+fillForm(); renderAll(); connect(); showView(location.hash.slice(1));
 </script>
 </body>
 </html>

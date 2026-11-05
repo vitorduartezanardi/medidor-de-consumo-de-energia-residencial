@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Medidor de Energia · ESP32 + MQTT</title>
+<title>Medidor de Consumo de Energia Residencial</title>
 <meta name="description" content="Medidor de baixo custo com ESP32 que mede tensão e corrente, calcula potência, consumo e custo e mostra tudo em um painel no celular. TCC da Universidade São Francisco.">
 <meta name="theme-color" content="#f6f3ee" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#111316" media="(prefers-color-scheme: dark)">
-<meta property="og:title" content="Medidor de Energia · ESP32 + MQTT">
+<meta property="og:title" content="Medidor de Consumo de Energia Residencial">
 <meta property="og:description" content="Potência, consumo e custo da sua instalação elétrica em tempo real, no celular.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="img/tela_inicio.jpg">
@@ -39,9 +39,9 @@
 
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="#topo" aria-label="Medidor de Energia, início">
+    <a class="brand" href="#topo" aria-label="Medidor de Consumo de Energia Residencial, início">
       <svg aria-hidden="true"><use href="#i-bolt"/></svg>
-      <span>Medidor de Energia<small>TCC · Universidade São Francisco</small></span>
+      <span>Medidor de Consumo<small>TCC · Universidade São Francisco</small></span>
     </a>
     <button class="burger" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu"><svg aria-hidden="true"><use href="#i-menu"/></svg></button>
     <nav class="menu" id="menu" aria-label="Seções">
@@ -51,7 +51,6 @@
       <a href="#software">Software</a>
       <a href="#painel">Painel</a>
       <a href="#resultados">Resultados</a>
-      <a href="#relacionados">Relacionados</a>
       <a href="#equipe">Equipe</a>
     </nav>
   </div>
@@ -247,11 +246,14 @@
     <div class="sec-head">
       <p class="kicker">Resultados e validação</p>
       <h2>Em que ponto estamos.</h2>
-      <p>O sistema já mede e publica. A etapa atual é a calibração e a comparação das leituras com instrumentos de referência.</p>
+      <p>Os sensores e o software foram ensaiados individualmente. A etapa atual é a integração completa com o ESP32, a calibração e a comparação das leituras com instrumentos de referência.</p>
     </div>
     <div class="tbl"><table>
       <thead><tr><th>Etapa</th><th>Situação</th></tr></thead>
       <tbody>
+        <tr><td>Ensaio de corrente (SCT-013-005): 59,3 mV RMS, cerca de 0,297 A contra 0,31 A esperados</td><td><span class="tag ok">Concluído</span></td></tr>
+        <tr><td>Ensaio de tensão (ZMPT101B): sinal de 60 Hz com amplitude ajustável pelo trimpot</td><td><span class="tag ok">Concluído</span></td></tr>
+        <tr><td>Testes de software e comunicação (simuladores e broker MQTT, mensagens a cada 1 s)</td><td><span class="tag ok">Concluído</span></td></tr>
         <tr><td>Firmware do ESP32 (medição, cálculo, MQTT)</td><td><span class="tag ok">Concluído</span></td></tr>
         <tr><td>Aplicação web e publicação no GitHub Pages</td><td><span class="tag ok">Concluído</span></td></tr>
         <tr><td>Calibração da tensão (ZMPT101B) contra multímetro</td><td><span class="tag ok">Concluído</span></td></tr>
@@ -293,32 +295,8 @@ CAL_V = <span class="v">0,0656</span> V/contagem</pre></div>
   </div>
 </section>
 
-<!-- ============ RELACIONADOS ============ -->
-<section id="relacionados">
-  <div class="wrap">
-    <div class="sec-head">
-      <p class="kicker">Trabalhos relacionados</p>
-      <h2>Ponto de partida: o WiseWatt.</h2>
-      <p>O WiseWatt – Fast Management Energy System, trabalho de graduação da Engenharia Elétrica da mesma universidade, também mede tensão e corrente para acompanhar o consumo. Este projeto parte da mesma ideia e muda a arquitetura.</p>
-    </div>
-    <div class="tbl"><table>
-      <thead><tr><th></th><th>WiseWatt</th><th>Este projeto</th></tr></thead>
-      <tbody>
-        <tr><td><b>Microcontrolador</b></td><td>ESP8266 (módulo ESP-01)</td><td>ESP32 DevKit V1</td></tr>
-        <tr><td><b>Sensor de corrente</b></td><td>ACS712, em série com a carga</td><td>SCT-013-005, não invasivo</td></tr>
-        <tr><td><b>Sensor de tensão</b></td><td>ZMPT101B</td><td>ZMPT101B</td></tr>
-        <tr><td><b>Comunicação</b></td><td>HTTP para uma API em Python</td><td>MQTT com broker</td></tr>
-        <tr><td><b>Armazenamento</b></td><td>Banco de dados SQL Server</td><td>Histórico de 24 h retido no broker</td></tr>
-        <tr><td><b>Interface</b></td><td>Painel web com Chart.js</td><td>Aplicação web de arquivo único, sem servidor próprio</td></tr>
-      </tbody>
-    </table></div>
-    <div class="note info" style="margin-top:22px"><svg aria-hidden="true"><use href="#i-info"/></svg><p>No WiseWatt, a validação comparou o sistema com um multímetro em três cargas (airfryer, desktop e micro-ondas) e obteve taxas de confiabilidade entre 97% e 99%. Esse é o nível de referência que os ensaios deste projeto buscam comparar.</p></div>
-    <p class="muted small" style="margin-top:14px">Fonte: SILVA, T. R.; SILVA, W. C.; CAVALARO, F. <i>WiseWatt – Fast Management Energy System: um sistema inovador para o gerenciamento on time de consumo de energia elétrica</i>. Universidade São Francisco, Campus Bragança Paulista.</p>
-  </div>
-</section>
-
 <!-- ============ EQUIPE ============ -->
-<section class="alt" id="equipe">
+<section id="equipe">
   <div class="wrap">
     <div class="sec-head">
       <p class="kicker">Equipe</p>
@@ -334,7 +312,7 @@ CAL_V = <span class="v">0,0656</span> V/contagem</pre></div>
 </section>
 
 <!-- ============ DOCUMENTAÇÃO ============ -->
-<section id="documentacao">
+<section class="alt" id="documentacao">
   <div class="wrap">
     <div class="sec-head">
       <p class="kicker">Documentação</p>
@@ -342,10 +320,12 @@ CAL_V = <span class="v">0,0656</span> V/contagem</pre></div>
       <p>Todo o software está em um repositório público. Dá para montar o seu próprio medidor seguindo o README.</p>
     </div>
     <div class="grid g2">
-      <a class="card doc" href="https://github.com/vitorduartezanardi/tcc-monitor-energia-usf"><div class="ic"><svg aria-hidden="true"><use href="#i-github"/></svg></div><div><h3>Repositório no GitHub</h3><p>Código, firmware, workflow e instruções.</p></div></a>
-      <a class="card doc" href="https://github.com/vitorduartezanardi/tcc-monitor-energia-usf/blob/main/firmware/energy_monitor/energy_monitor_ingrid_barbara.ino"><div class="ic"><svg aria-hidden="true"><use href="#i-cpu"/></svg></div><div><h3>Firmware do ESP32</h3><p>Arquivo <code>.ino</code> para a placa DevKit V1.</p></div></a>
-      <a class="card doc" href="https://github.com/vitorduartezanardi/tcc-monitor-energia-usf/blob/main/app/index.html"><div class="ic"><svg aria-hidden="true"><use href="#i-code"/></svg></div><div><h3>Código do painel</h3><p>Aplicação web completa em um arquivo.</p></div></a>
-      <a class="card doc" href="https://github.com/vitorduartezanardi/tcc-monitor-energia-usf/tree/main/tools"><div class="ic"><svg aria-hidden="true"><use href="#i-book"/></svg></div><div><h3>Ferramentas de teste</h3><p>Simulador do ESP32 e assinante MQTT, em Node.js.</p></div></a>
+      <a class="card doc" href="painel/#doc"><div class="ic"><svg aria-hidden="true"><use href="#i-book"/></svg></div><div><h3>Documentação do projeto</h3><p>Resumo do TCC dentro do painel.</p></div></a>
+      <a class="card doc" href="painel/#info"><div class="ic"><svg aria-hidden="true"><use href="#i-book"/></svg></div><div><h3>Informativos de energia</h3><p>Etiqueta Inmetro, selo Procel, bandeiras e dicas.</p></div></a>
+      <a class="card doc" href="https://github.com/vitorduartezanardi/medidor-de-consumo-de-energia-residencial"><div class="ic"><svg aria-hidden="true"><use href="#i-github"/></svg></div><div><h3>Repositório no GitHub</h3><p>Código, firmware, workflow e instruções.</p></div></a>
+      <a class="card doc" href="https://github.com/vitorduartezanardi/medidor-de-consumo-de-energia-residencial/blob/main/firmware/energy_monitor/energy_monitor_ingrid_barbara.ino"><div class="ic"><svg aria-hidden="true"><use href="#i-cpu"/></svg></div><div><h3>Firmware do ESP32</h3><p>Arquivo <code>.ino</code> para a placa DevKit V1.</p></div></a>
+      <a class="card doc" href="https://github.com/vitorduartezanardi/medidor-de-consumo-de-energia-residencial/blob/main/app/index.html"><div class="ic"><svg aria-hidden="true"><use href="#i-code"/></svg></div><div><h3>Código do painel</h3><p>Aplicação web completa em um arquivo.</p></div></a>
+      <a class="card doc" href="https://github.com/vitorduartezanardi/medidor-de-consumo-de-energia-residencial/tree/main/tools"><div class="ic"><svg aria-hidden="true"><use href="#i-book"/></svg></div><div><h3>Ferramentas de teste</h3><p>Simulador do ESP32 e assinante MQTT, em Node.js.</p></div></a>
     </div>
     <h3 style="margin:40px 0 14px">Limitações</h3>
     <div class="grid g3">
@@ -361,11 +341,11 @@ CAL_V = <span class="v">0,0656</span> V/contagem</pre></div>
 <footer>
   <div class="wrap">
     <div>
-      <p><b>Medidor de Energia · ESP32 + MQTT</b></p>
+      <p><b>Medidor de Consumo de Energia Residencial</b></p>
       <p>Universidade São Francisco · Campus Bragança Paulista · 2026</p>
     </div>
     <div>
-      <p><a href="https://github.com/vitorduartezanardi/tcc-monitor-energia-usf">Repositório no GitHub</a></p>
+      <p><a href="https://github.com/vitorduartezanardi/medidor-de-consumo-de-energia-residencial">Repositório no GitHub</a></p>
       <p><a href="#topo">Voltar ao topo</a></p>
     </div>
   </div>
